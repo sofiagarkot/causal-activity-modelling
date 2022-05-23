@@ -10,10 +10,3 @@ pip install -r requirements.txt
 1) The analyzed file should be in the European Data Format (EDF)
 2) The markings of the IEDs should be recorded in Time Measurement Units (TMu).
 
-<[[1]](#1). -->
-
-<!-- ## References
-<a id="1">[1]</a> 
-Dijkstra, E. W. (1968). 
-Go to statement considered harmful. 
-Communications of the ACM, 11(3), 147-148. -->
