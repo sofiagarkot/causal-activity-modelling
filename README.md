@@ -3,8 +3,10 @@
 This repository contains the implementation of the causal brain activity modelling described in my bachelor thesis. 
 
 ## Installation
-Python 3.5+
-pip install -r requirements.txt
+```
+conda env create -f environment.yml
+```
+
 
 ## Requirements for the data
 1) The analyzed file should be in the European Data Format (EDF)
