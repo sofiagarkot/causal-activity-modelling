@@ -1,6 +1,6 @@
 # Causal brain activity modeling for the understanding of epilepsy pathogenesis
 
-This repository contains the implementation of the causal brain activity modelling described in my bachelor thesis, as well as the ?results? of 10 patients processing. 
+This repository contains the implementation of the causal brain activity modelling described in my bachelor thesis. 
 
 ## Installation
 Python 3.5+
