@@ -21,10 +21,9 @@ python run.py --window_length=500 --edf_file=/data/garkots/third_package/pat04_O
 ```
 The following parameters are recommended to be changed from the default values
 
-'''
+```
 --window_length = 100   # -> length of window for analysis
 --path_to_ica_matrix = ...  # -> if an experiment was previously conducted on a patient, in order to save computing time it is recommended to specify path to storage of ICA decomposing matrix
 --precomputed_ica = True   # -> reads previously computed ICA matrix 
 --chosen_components = ICA001 ICA003 ICA023 #-> in case the chosen component are prefered to be chosen manually 
-''
-
+```
