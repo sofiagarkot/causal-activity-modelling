@@ -3,8 +3,15 @@
 This repository contains the implementation of the causal brain activity modelling described in my bachelor thesis. 
 
 ## Installation
+1. Clone the repository.
+2. Create the environment.
 ```
 conda env create -f environment.yml
+```
+3. Run the analysis with the specified parameters :) 
+```
+cd scripts
+python run.py --window_length=*** --edf_file=***path to edf file*** --annotations=***path to directory containing annotations*** --path_to_visual_outputs=***path to directory where the results of visuals analysis will be stored (you can turn off the saving of visuals)*** --path_to_results=***path to directory where the results (per tau and per component distributions) will be stored*** --path_to_ica_matrix=***path to directory where the decomposed components will be stored***--state=***sleep/wake***
 ```
 
 ## Requirements for the dataset
