@@ -11,7 +11,15 @@ conda env create -f environment.yml
 3. Run the analysis with the specified parameters :) 
 ```
 cd scripts
-python run.py --window_length=*** --edf_file=***path to edf file*** --annotations=***path to directory containing annotations*** --path_to_visual_outputs=***path to directory where the results of visuals analysis will be stored (you can turn off the saving of visuals)*** --path_to_results=***path to directory where the results (per tau and per component distributions) will be stored*** --path_to_ica_matrix=***path to directory where the decomposed components will be stored***--state=***sleep/wake***
+python run.py --window_length=*** --edf_file=***path to edf file*** 
+--annotations=***path to directory containing annotations*** 
+--path_to_visual_outputs=***path to directory where the results of visuals analysis will be stored (you can turn off the saving of visuals)*** 
+--path_to_results=***path to directory where the results (per tau and per component distributions) will be stored*** 
+--path_to_ica_matrix=***path to directory where the decomposed components will be stored***
+--state=***sleep/wake***
+--save_visuals=***True/False***
+--automated_choice=***True/False - whther to automatically detect the significant components***
+--precomputed_ica=***True/False - in case when the experiment has previously been done on the same patient, to save the time the precomputed decomposed components can be used***
 ```
 
 ## Requirements for the dataset
