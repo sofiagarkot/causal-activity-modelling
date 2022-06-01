@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from pingouin import partial_corr, corr
 from sympy.utilities.iterables import multiset_permutations
 
-from utils import translate, get_average, read_annotations, no_channels_read_annotations, save_to_json
+from utils import translate, get_average, no_channels_read_annotations, save_to_json
 from errors import OutOfSizeError
 
 class Patient:
@@ -38,22 +38,20 @@ class Patient:
 
         self.raw = mne.io.read_raw_edf(edf_file)
         self.raw_data = self.raw.get_data()
+        # .filter(l_freq=1., h_freq=None)
         self.fs = self.raw.info['sfreq']
         self.ch_names = self.raw.ch_names
 
-        if not ignore_channels:
-            self.annotations = read_annotations(annotations)
-        else:
-            self.annotations = no_channels_read_annotations(annotations,
+        self.annotations = no_channels_read_annotations(annotations,
                                                             fs = self.fs,
                                                             window=window_length,
                                                             max_length=self.raw_data.shape[1])
 
-            if control_experiment:
-                key_random_annotations = [i for i in self.annotations.keys()][0]
-                len_values = len(self.annotations[key_random_annotations])
-                new_vals = [random.randrange(window_length, self.raw_data.shape[1]-window_length) for i in range(len_values)]
-                self.annotations[key_random_annotations] = new_vals
+        if control_experiment:
+            key_random_annotations = [i for i in self.annotations.keys()][0]
+            len_values = len(self.annotations[key_random_annotations])
+            new_vals = [random.randrange(window_length, self.raw_data.shape[1]-window_length) for i in range(len_values)]
+            self.annotations[key_random_annotations] = new_vals
 
         self.path_to_visual_outputs = path_to_visual_outputs
         self.path_to_results = path_to_results
@@ -84,6 +82,7 @@ class Patient:
         '''
         if self.precomputed_ica:
             self.ica_sources_data = np.load(self.path_to_ica_matrix+'/ica_matrix.npy')
+            self.topomap = np.load(self.path_to_ica_matrix+'/ica_topomap.npy')
 
             self.ica_sources_ch_names = []
             with open(self.path_to_ica_matrix+"/component_names.txt", "r") as f:
@@ -94,11 +93,14 @@ class Patient:
             ica = mne.preprocessing.ICA(n_components=variability_explained, random_state=self.SEED)
             ica.fit(self.raw)
 
+            self.topomap = ica.get_components()
+
             ica_sources = ica.get_sources(self.raw)
             self.ica_sources_ch_names = ica_sources.ch_names
             self.ica_sources_data = ica_sources.get_data()
 
             np.save(self.path_to_ica_matrix+'/ica_matrix.npy', self.ica_sources_data)
+            np.save(self.path_to_ica_matrix+'/ica_topomap.npy', self.topomap)
 
             with open(self.path_to_ica_matrix+"/component_names.txt", "w") as f:
                 for s in self.ica_sources_ch_names:
@@ -235,18 +237,24 @@ class Patient:
             plt.plot(duration_timestamp, average_signal, lw=3, label='pattern')
             lower_bound = average_signal - signal_stdev
             upper_bound = average_signal + signal_stdev
-            plt.fill_between(duration_timestamp, lower_bound, upper_bound, facecolor='lightyellow', alpha=0.5,
+            plt.fill_between(duration_timestamp, lower_bound, upper_bound, facecolor='lightgoldenrodyellow', alpha=0.5,
                              label='1 sigma range')
 
-            plt.title("Channel " + str(channel), fontsize=23)
+            plt.title("Average state during IEDs on channel " + str(channel), fontsize=45)
 
             for component in self.normalized_per_component_states:
                 average_component, component_stdev = get_average(self.normalized_per_component_states[component])
 
                 plt.plot(duration_timestamp, average_component, lw=1, label=component)
 
-            plt.title("Channel " + str(channel), fontsize=23)
-            plt.legend()
+            plt.title("Average state during IEDs of channel " + str(channel), fontsize=45)
+            plt.legend(prop={'size': 7})
+            plt.xlabel('Time relative to an IED', fontsize=40)
+            plt.ylabel('Signal, mV', fontsize=40)
+
+            plt.xticks(fontsize = 30)
+            plt.yticks(fontsize=30)
+
             if savefigures:
                 plt.savefig(self.path_to_visual_outputs+'/all_components/ch_'+str(channel)+'.jpg')
             plt.close()
@@ -266,7 +274,7 @@ class Patient:
             plt.plot(duration_timestamp, average_signal, lw=3, label='pattern')
             lower_bound = average_signal - signal_stdev
             upper_bound = average_signal + signal_stdev
-            plt.fill_between(duration_timestamp, lower_bound, upper_bound, facecolor='lightyellow', alpha=0.5,
+            plt.fill_between(duration_timestamp, lower_bound, upper_bound, facecolor='lightgoldenrodyellow', alpha=0.5,
                              label='1 sigma range')
 
             for component in self.normalized_per_component_states:
@@ -275,8 +283,14 @@ class Patient:
                     average_component, component_stdev = get_average(self.normalized_per_component_states[component])
                     plt.plot(duration_timestamp, average_component, lw=1, label=component)
 
-            plt.title("Channel " + str(channel), fontsize=23)
+            plt.title("Average state during IEDs on channel " + str(channel), fontsize=45)
             plt.legend()
+            plt.xlabel('Time relative to an IED', fontsize=40)
+            plt.ylabel('Signal, mV', fontsize=40)
+
+            plt.xticks(fontsize = 30)
+            plt.yticks(fontsize=30)
+            plt.legend(prop={'size': 30})
 
             if savefigures:
                 plt.savefig(self.path_to_visual_outputs+'/significant_components/ch_'+str(channel)+'.jpg')
@@ -362,7 +376,7 @@ class Patient:
 
 
 
-    def run_causal_inference(self, no_combination=3):
+    def run_causal_inference(self, no_combination=None):
         '''
         The function runs the causal analysis on the extracted components. If the n.o. components of choice exceeds 3,
          all of the possible combinations by no_combination variable (recomennded = 3) are checked from the list.
@@ -379,6 +393,10 @@ class Patient:
         taus = [i for i in range(self.window_to_detect)]
 
         pval_min_threshold, pval_max_threshold = 0.08, 0.08
+
+        frequent_components = {}
+        for c in self.significant_components:
+            frequent_components[c] = 0
 
         for combination in possible_combinations:
             print('combination', combination)
@@ -402,6 +420,8 @@ class Patient:
 
                     if pc['p-val'][0] > pval_max_threshold:
                         if correlation['p-val'][0] < pval_min_threshold:
+                            frequent_components[key_combination[0]] +=1
+
                             if tau in results[key_combination].keys():
                                 results[key_combination][tau].append(t0)
                             else:
@@ -409,6 +429,38 @@ class Patient:
                                 results[key_combination][tau] = [t0]
 
         self.per_combination_frequency = results
+        self.frequent_components = frequent_components
+
+    def get_center_channels(self):
+
+        component_to_freq = [(c, self.frequent_components[c]) for c in self.frequent_components]
+        component_to_freq.sort(key = lambda x:x[1], reverse=True)
+        chosen = component_to_freq[:3]
+        chosen_indxs = [int(i[0][3:]) for i in chosen]
+
+        per_channel_freq = {}
+
+        for component in chosen_indxs:
+            component_mapping = self.topomap[:, component]
+            top_5_indices = np.argpartition(component_mapping, -5)[-5:]
+            for i in top_5_indices:
+                ch = self.ch_names[i]
+                if ch in per_channel_freq.keys():
+                    per_channel_freq[ch] += 1
+                else:
+                    per_channel_freq[ch] = 1
+
+        channel_to_freq = [(c, per_channel_freq[c]) for c in per_channel_freq]
+        channel_to_freq.sort(key = lambda x:x[1], reverse=True)
+
+        if len(channel_to_freq) > 5:
+            chosen_channels = channel_to_freq[:5]
+            chosen_channels = [i[0] for i in chosen_channels]
+        else:
+            chosen_channels = channel_to_freq
+            chosen_channels = [i[0] for i in chosen_channels]
+
+        return chosen_channels
 
 
     def visualize_per_Tau_frequency(self, tau, savefigures = False):

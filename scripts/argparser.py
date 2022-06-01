@@ -48,14 +48,27 @@ def add_args(parser):
     parser.add_argument('--window_length', type=int,
                         default=100)
 
+    parser.add_argument('--automated_choice', type=bool,
+                        default=False)
+
+    parser.add_argument('--save_visuals', type=bool,
+                        default=True)
+
+
 
 def check_args(parser):
 
     if parser.path_to_visual_outputs:
         assert os.path.isdir(parser.path_to_visual_outputs)
-        assert os.path.isdir(parser.path_to_visual_outputs+'/all_components')
-        assert os.path.isdir(parser.path_to_visual_outputs+'/significant_components')
-        assert os.path.isdir(parser.path_to_visual_outputs+'/per_tau_results')
+
+        if not os.path.isdir(parser.path_to_visual_outputs+'/all_components'):
+            os.mkdir(parser.path_to_visual_outputs+'/all_components')
+
+        if not os.path.isdir(parser.path_to_visual_outputs+'/significant_components'):
+            os.mkdir(parser.path_to_visual_outputs+'/significant_components')
+
+        if not os.path.isdir(parser.path_to_visual_outputs+'/per_tau_results'):
+            os.mkdir(parser.path_to_visual_outputs+'/per_tau_results')
 
 def parse_args():
     parser = ArgumentParser()

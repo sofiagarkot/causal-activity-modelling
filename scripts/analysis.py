@@ -6,7 +6,7 @@ from utils import parse_ica_channels
 
 def make_patient_analysis(args):
 
-    deviative_component_choice = False
+    deviative_component_choice = args.automated_choice
     # implement it more carefully
     patient = Patient( edf_file = args.edf_file,
                        annotations = args.annotations,
@@ -43,11 +43,19 @@ def make_patient_analysis(args):
 
     print("Chosen components names", chosen)
 
-    if args.path_to_visual_outputs:
+    if args.save_visuals:
         patient.plot_selected_components_during_seizures(potentially_significant=chosen, savefigures=True)
 
     patient.get_significant_components_state(potentially_significant=chosen)
     patient.run_causal_inference()
+
+    center_channels = patient.get_center_channels()
+    print("Channels located closer to the epileptogenic region: " )
+    for i in center_channels:
+        print(i)
+    with open(patient.path_to_results + "/central_channels.txt", "w") as f:
+        for s in center_channels:
+            f.write(str(s) + "\n")
 
     tau_max = per_tau_events_density_plot(patient)
 
